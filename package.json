@@ -1,0 +1,16 @@
+{
+  "name": "biztime",
+  "version": "1.0.0",
+  "description": "RESTful backend API server for a simple company / invoice tracker. Technology stack is Node.js, Express, and Postgres.",
+  "main": "server.js",
+  "scripts": {
+    "test": "jest",
+    "start": "node server.js"
+  },
+  "author": "Jim Geist",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "pg": "^8.6.0"
+  }
+}
