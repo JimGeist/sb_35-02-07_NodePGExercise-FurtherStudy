@@ -1,4 +1,5 @@
 /** BizTime express application. */
+
 // Server port
 const PORT = 5000;
 
@@ -14,6 +15,9 @@ app.use("/companies", companyRoutes);
 
 const invoiceRoutes = require("./routes/invoices");
 app.use("/invoices", invoiceRoutes);
+
+const industryRoutes = require("./routes/industries");
+app.use("/industries", industryRoutes);
 
 
 /** 404 handler */

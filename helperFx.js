@@ -29,7 +29,7 @@ function validateRequired(fieldList, source, allRequired = true) {
 
     let errorValidation = "";
     let errorDelim = "";
-    debugger;
+
     for (const key of fieldList) {
         // if (source[key]) works . . . until source[key] refers to a boolean :/
         //  a boolean set to false no less. Soo the below code is used in place.
@@ -88,6 +88,14 @@ function prepareInsertData(requiredKeys, optionalKeys, requestBody) {
         requestBody, object, the request object body that should contain the keys and values
          for the fields listed in requiredKeys.
     
+        Returns: {
+            success: true when no errors (all requred keys) exist,
+            insertData: {
+                argumentsNbr: string, the $1, ... $n argument for the parameterized values
+                argumentsName: string, the field names
+                argumentsValues: array, the values for each field
+            }
+    }; 
     */
 
     // make sure non-blank values exist for code and name.
@@ -125,7 +133,7 @@ function prepareInsertData(requiredKeys, optionalKeys, requestBody) {
         // check whether a value exists for the optional key in requestBody.
         let tester;
         for (const key of optionalKeys) {
-            if (Object.hasOwnProperty.call(optionalKeys, key)) {
+            if (Object.hasOwnProperty.call(requestBody, key)) {
                 // optionalKeys were not validated so we need to check them
                 if (typeof (requestBody[key]) === "string") {
                     // We have a string. trim and save it when it has a non-zero length.
@@ -188,8 +196,6 @@ function prepareUpdateData(requestKeys, requestBody) {
                 error: `Field(s) ${fields} are needed for an update. No fields were provided.`
             }
     */
-
-    // debugger
 
     // validate the request keys. Third parm is false because all requestKeys are NOT required.
     const resultsValidation = validateRequired(requestKeys, requestBody, false);
@@ -282,8 +288,72 @@ function checkNumbers(inNumber) {
 }
 
 
+function buildIndPlusComp(arr) {
+    /* Function changes the input in arr, an array, from   
+        arr [ 
+            { "code": "comp", "industry": "Computer", "comp_code": "apple" },
+            { "code": "comp", "industry": "Computer", "comp_code": "ibm" },
+            { "code": "manu", "industry": "Manufacturing", "comp_code": "apple" },
+            { "code": "fin", "industry": "Finance", "comp_code": null } ]
+        to [
+            { "code": "comp", "industry": "Computer", "companies": ["apple","ibm"] },
+            { "code": "manu", "industry": "Manufacturing", "companies": ["apple"] },
+            { "code": "fin", "industry": "Finance", "companies": [] } ]
+
+    */
+
+    const outValues = arr.reduce(function (arrAccum, arrNext) {
+        if (arrAccum.length > 0) {
+            if (arrAccum[(arrAccum.length - 1)].code === arrNext.code) {
+                // industry code in the last accumulator entry and next industry codes match. 
+                // Add the non-null company code to companies array.
+                if (arrNext.comp_code !== null) {
+                    arrAccum[(arrAccum.length - 1)].companies.push(arrNext.comp_code);
+                }
+
+                return arrAccum;
+            } else {
+                // industry code in the last accumulator entry and next industry codes 
+                //  do NOT match.
+                // Build out the next industry information and add the non-null company 
+                //  code to the companies array.
+                const nextIndustry = {
+                    code: arrNext.code,
+                    industry: arrNext.industry,
+                    companies: []
+                };
+                if (arrNext.comp_code !== null) {
+                    nextIndustry.companies.push(arrNext.comp_code);
+                }
+
+                return arrAccum.concat(nextIndustry)
+            }
+        } else {
+            // first time through logic - sets up the structure of the accumulator
+            //  we need a companies array and do not need comp_code since the comp_codes
+            //  are now in the companies array.
+            const nextIndustry = {
+                code: arrNext.code,
+                industry: arrNext.industry,
+                companies: []
+            };
+            if (arrNext.comp_code !== null) {
+                nextIndustry.companies.push(arrNext.comp_code);
+            }
+
+            return arrAccum.concat(nextIndustry);
+        }
+
+    }, []);
+
+    return outValues;
+
+}
+
+
 module.exports = {
-    checkNumbers: checkNumbers
+    buildIndPlusComp: buildIndPlusComp
+    , checkNumbers: checkNumbers
     , prepareInsertData: prepareInsertData
     , prepareUpdateData: prepareUpdateData
     , validateRequired: validateRequired

@@ -5,7 +5,6 @@ const express = require("express");
 const ExpressError = require("../expressError");
 const { checkNumbers, prepareInsertData, prepareUpdateData } = require("../helperFx");
 const { dbSelect, dbSelectAll, dbDelete, dbInsert, dbUpdate } = require("../dbFunctions");
-const { response } = require("express");
 const router = express.Router();
 
 
@@ -25,7 +24,6 @@ router.get("/", async function (req, res, next) {
         errorSelect.status = 400;
         return next(errorSelect);
     }
-
 
 });
 
@@ -126,7 +124,6 @@ router.post("/", async function (req, res, next) {
 })
 
 
-
 /** PUT {/invoices}/[id] ; returns {invoice: {id, comp_code, amt, paid, add_date, paid_date}}   */
 router.put("/:id", async function (req, res, next) {
     //  Route updates the invoice indicated by id. comp_code, amt, paid, and paid_date are updatable
@@ -174,7 +171,6 @@ router.put("/:id", async function (req, res, next) {
         }
     }
     //     Returns: {invoice: {id, comp_code, amt, paid, add_date, paid_date}}
-
 
 })
 

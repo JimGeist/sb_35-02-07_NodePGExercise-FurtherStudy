@@ -5,7 +5,6 @@ const express = require("express");
 const ExpressError = require("../expressError");
 const { prepareInsertData, prepareUpdateData } = require("../helperFx");
 const { dbDelete, dbInsert, dbSelect, dbUpdate } = require("../dbFunctions");
-const { response } = require("express");
 const router = express.Router();
 
 
@@ -22,6 +21,7 @@ router.get("/", async function (req, res, next) {
     }
 
 });
+
 
 /** GET {/companies}/[code] ; return {company: {code, name, description}} **/
 router.get("/:code", async function (req, res, next) {
@@ -48,11 +48,19 @@ router.get("/:code", async function (req, res, next) {
                 results.rows[0]["invoices"] = resultsInvoices.sqlReturn;
             }
 
+            // SELECT ind.industry 
+            // FROM companies_industries AS ci 
+            // LEFT JOIN industries AS ind ON ind.code = ci.ind_code
+            // WHERE ci.comp_code = 'apple'
+            selectData.criteria = 'ci.comp_code = $1';
+            selectData.criteriaValues = [inCode];
+            selectData.selectFields = "ind.industry";
+            let table = "companies_industries AS ci LEFT JOIN industries AS ind ON ind.code = ci.ind_code"
 
-
-
-
-
+            const resultsIndustries = await dbSelect(selectData, table);
+            if (resultsInvoices.success) {
+                results.rows[0]["Industries"] = resultsIndustries.sqlReturn.map(ind => ind.industry);
+            }
 
             return res.json({ company: results.rows[0] });
         } else {
@@ -72,7 +80,6 @@ router.get("/:code", async function (req, res, next) {
 router.post("/", async function (req, res, next) {
     // Route adds a new company is added by using JSON inputs for code, name, and description
     // Returns new company object {company: {code, name, description}}
-    // debugger
 
     // make sure non-blank values exist for code and name.
     // Order of requiredKeys in the list must match the order expected by the insert!!
@@ -144,34 +151,6 @@ router.put("/:code", async function (req, res, next) {
     }
 
 });
-
-
-// /** PUT {/companies}/[code] ; return edited company object {company: {code, name, description}} **/
-// router.put("/:code", async function (req, res next) {
-//     // Existing company idenified by code is upadated JSON inputs for name and description
-//     // Returns edited company object {company: {code, name, description}} when successful or
-//     //  404 / Company not found when the code was not found.
-
-//     const valueList = [];
-//     const code = req.params.code;
-//     let updates = "";
-
-//     const requiredKeys = ["name", "description"];
-//     const resultsValidation = validateRequired(requiredKeys, req.body, false);
-//     validateResults
-
-//     try {
-//         const result = await db.query(`
-//             UPDATE companies 
-//             SET ${updates} 
-//             WHERE code = $1
-//         `, valueList);
-
-//     } catch (error) {
-//         return next(error);
-//     }
-
-// });
 
 
 /** DELETE {/companies}/[code] ; return deleted message {company: {status: "deleted"}} **/
